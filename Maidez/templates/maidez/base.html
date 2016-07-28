@@ -46,7 +46,7 @@
       <nav class="navbar navbar-inverse navbar-fixed-top" id="siteNav">
         <div class="container">
           <div class="navbar-header">
-            <a class="navbar-brand" href="/">UPS Status</a>
+            <a class="navbar-brand" href="/">{% block brandText %}Smart-UPS X 3000 Status{% endblock %}</a>
           </div>
         </div>
       </nav>
@@ -54,12 +54,15 @@
     </div>
 
     <div class="container">
+<!--
       <div class="page-header">
         <h1>{% block pageHeader %}{% endblock %}</h1>
       </div>
       <p class="lead">
         {% block pageLead %}{% endblock %}
       </p>
+-->
+
       {% block pageContent %}{% endblock %}
     </div>
 

@@ -1,209 +1,258 @@
-{% extends "maidez/base.html" %}
 
-{% block extraScript %}
-<script type="text/javascript">
-  var keys=[
-    "upsModel",
-    "batteryStatus",
-    "batteryTime",
-    "batteryCapacity",
-    "batteryTemperature",
-    "batteryTimeRemaining",
-    "batteryVoltage",
-    "inputVoltage",
-    "inputVoltageMax",
-    "inputVoltageMin",
-    "inputFrequency",
-    "inputFailCause",
-    "outputStatus",
-    "outputVoltage",
-    "outputFrequency",
-    "outputLoad",
-    "outputCurrent",
-    "outputEfficiency",
-    "outputEnergyUsage",
-  ];
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>
+      
+      PepTracker UPS Status
+      
+    </title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-1q8mTJOASx8j1Au+a5WDVnPi2lkFfwwEAa8hDDdjZlpLegxhjVME1fgjWPGmkzs7" crossorigin="anonymous">
+    <style type="text/css">
+      html {
+        position: relative;
+        min-height: 100%;
+      }
 
-  heartbeatCallback=function(response){
-    var i,len;
-    for(i=0, len=keys.length; i<len; i++){
-      $('#'+keys[i]).attr('value', response[keys[i]]);
+      body {
+        margin-bottom: 60px;
+      }
+ 
+      body > .container {
+        padding: 60px 15px 0;
+      }
+
+      .footer {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 60px;
+        background: #f5f5f5;
+      }
+
+      .container .text-muted { margin: 20px 0; }
+      .footer > .container {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+
+      .gi-2x{font-size: 2em;}
+      .gi-3x{font-size: 3em;}
+      .gi-4x{font-size: 4em;}
+      .gi-5x{font-size: 5em;}
+
+      #batteryCapacity {
+        margin: 8px auto;
+        width: 200px;
+        height: 100px;
+      }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js" integrity="sha384-0mSbJDEHialfmuBBQP6A4Qrprq5OVfW37PRR3j5ELqxss1yVqOtnepnHVP9aJ7xS" crossorigin="anonymous"></script>
+    <script src="https://rawgit.com/kimmobrunfeldt/progressbar.js/1.0.0/dist/progressbar.js"></script>
+    
+  <script type="text/javascript">
+    var keys=[
+      "upsModel",
+      "batteryStatus",
+      "batteryTime",
+      "batteryCapacity",
+      "batteryTemperature",
+      "batteryTimeRemaining",
+      "batteryVoltage",
+      "inputVoltage",
+      "inputVoltageMax",
+      "inputVoltageMin",
+      "inputFrequency",
+      "inputFailCause",
+      "outputStatus",
+      "outputVoltage",
+      "outputFrequency",
+      "outputLoad",
+      "outputCurrent",
+      "outputEfficiency",
+      "outputEnergyUsage",
+      "heartbeat"
+    ];
+
+    heartbeatCallback=function(response){
+      var i,len,key,value;
+      for(i=0, len=keys.length; i<len; i++){
+        key=keys[i];
+        value=response[key];
+        if(key=="batteryCapacity") bar.animate(parseFloat(value)/100.);
+        else {
+          $('#'+key).text(value);
+          if($.inArray(key, ['batteryStatus','outputStatus'])>-1){
+            var glyph=$('#'+key+'Icon');
+            if(value=='onLine') glyph.removeClass('glyphicon-thumbs-down text-danger').addClass('glyphicon-thumbs-up text-success');
+            else glyph.removeClass('glyphicon-thumbs-up text-success').addClass('glyphicon-thumbs-down text-danger');
+          }
+        }
+      }
+      window.setTimeout(heartbeat, 60000);
     }
-    $('#heartbeat').text(response['heartbeat']);
-  }
 
-  heartbeat=function(){
-    $.get('/heartbeat/', {}, heartbeatCallback, 'json');
-  }
+    heartbeat=function(){
+      $.get('/heartbeat/', {}, heartbeatCallback, 'json');
+    }
 
-  $(function(){
-    window.setInterval(heartbeat, 60000);
-  });
-</script>
-{% endblock %}
+    $(function(){
+      heartbeat();
+      //window.setInterval(heartbeat, 60000);
+    });
 
-{% block pageHeader %}Status{% endblock %}
-{% block pageLead %}UPS Status Smart-UPS X 3000{% endblock %}
-{% block pageContent %}
-<div id="container">
-  <form class="form-horizontal well col-sm-5">
+    $(function(){
+      bar=new ProgressBar.SemiCircle(batteryCapacity, {
+        strokeWidth: 6,
+        color: '#FFEA82',
+        trailColor: '#eee',
+        trailWidth: 1,
+        easing: 'easeInOut',
+        duration: 1400,
+        svgStyle: null,
+        text: {
+          value: '',
+          alignToBottom: true
+        },
+        from: {color: '#a94442'},
+        to: {color: '#3c763d'},
+        // Set default step function for all animate calls
+        step: (state, bar) => {
+          bar.path.setAttribute('stroke', state.color);
+          var value = Math.round(bar.value() * 100);
+          bar.setText(value+"%");
+          bar.text.style.color = state.color;
+        } 
+      });
+      bar.animate(1.);
+    });
+  </script>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="upsModel">UPS Model</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="upsModel" />
+  </head>
+  <body>
+    <div id="wrap">
+      
+      <nav class="navbar navbar-inverse navbar-fixed-top" id="siteNav">
+        <div class="container">
+          <div class="navbar-header">
+            <a class="navbar-brand" href="/">Smart-UPS X 3000 Status</a>
+          </div>
         </div>
-      </div>
+      </nav>
+      
+    </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryStatus">Battery Status</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryStatus" />
+    <div class="container">
+
+      <div class="row"> <!-- Start 1st row -->
+
+        <div class="col-sm-6 col-lg-3">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Heartbeat</h4>
+            </div>
+            <div class="panel-body text-center">
+              <span id="heartbeatIcon" class="glyphicon glyphicon-heart gi-5x text-success"></span>
+            </div>
+            <div class="panel-footer text-center">
+              <small><strong>Timestamp:</strong>&nbsp;<span id="heartbeat">2016-07-26 18:20:23.640931</span></small>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryTime">Battery Time</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryTime" />
-          <div class="input-group-addon">s</div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Battery Status</h4>
+            </div>
+            <div class="panel-body text-center">
+              <!-- <span id="batteryStatusIcon" class="glyphicon glyphicon-thumbs-up gi-5x text-success"></span> -->
+              <span id="batteryStatusIcon" class="glyphicon gi-5x"></span>
+            </div>
+            <div class="panel-footer text-center">
+              <small><strong>Status Text:</strong>&nbsp;<span id="batteryStatus">onLine</span></small>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryCapacity">Battery Capacity</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryCapacity" />
-          <div class="input-group-addon">%</div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Battery Capacity</h4>
+            </div>
+            <div class="panel-body text-center">
+              <div id="batteryCapacity"></div>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryTemperature">Battery Temperature</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryTemperature" />
-          <div class="input-group-addon">°C</div>
+        <div class="col-sm-6 col-lg-3">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Output Status</h4>
+            </div>
+            <div class="panel-body text-center">
+              <span id="outputStatusIcon" class="glyphicon glyphicon-thumbs-up gi-5x text-success"></span>
+            </div>
+            <div class="panel-footer text-center">
+              <small><strong>Status Text:</strong>&nbsp;<span id="outputStatus">onLine</span></small>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryTimeRemaining">Battery Time Remaining</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryTimeRemaining" />
-          <div class="input-group-addon">MM:SS</div>
+      </div> <!-- End 1st row -->
+    
+      <div class="row"> <!-- Start 2nd row -->
+
+        <div class="col-sm-6 col-lg-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Battery Stats</h4>
+            </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item liitem"><strong>Time Remaining:</strong><span class="pull-right" id="batteryTimeRemaining"></span></li>
+                <li class="list-group-item liitem"><strong>Battery Voltage:</strong><span class="pull-right"><span id="batteryVoltage"></span>V</span></li>
+                <li class="list-group-item liitem"><strong>Battery Temperature:</strong><span class="pull-right"><span id="batteryTemperature"></span>&deg;C</span></li>
+                <li class="list-group-item liitem"><strong>Time On Battery:</strong><span class="pull-right"><span id="batteryTime"></span>s</span></li>
+              </ul>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="batteryVoltage">Battery Voltage</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="batteryVoltage" />
-          <div class="input-group-addon">V</div>
+        <div class="col-sm-6 col-lg-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Input Stats</h4>
+            </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item liitem"><strong>Input Voltage:</strong><span class="pull-right"><span id="inputVoltage"></span>V</span></li>
+                <li class="list-group-item liitem"><strong>Input Voltage (minimum):</strong><span class="pull-right"><span id="inputVoltageMin"></span>V</span></li>
+                <li class="list-group-item liitem"><strong>Input Voltage (maximum):</strong><span class="pull-right"><span id="inputVoltageMax"></span>V</span></li>
+                <li class="list-group-item liitem"><strong>Input Frequency:</strong><span class="pull-right"><span id="inputFrequency"></span>Hz</span></li>
+                <li class="list-group-item liitem"><strong>Last Input Fail Cause:</strong><span class="pull-right" id="inputFailCause"></span></li>  
+              </ul>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="inputVoltage">Input Voltage</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="inputVoltage" />
-          <div class="input-group-addon">V</div>
+        <div class="col-sm-6 col-lg-4">
+          <div class="panel panel-default">
+            <div class="panel-heading">
+              <h4 class="text-center">Output Stats</h4>
+            </div>
+              <ul class="list-group list-group-flush">
+                <li class="list-group-item liitem"><strong>Output Voltage:</strong><span class="pull-right"><span id="outputVoltage"></span>V</span></li>
+                <li class="list-group-item liitem"><strong>Output Current:</strong><span class="pull-right"><span id="outputCurrent"></span>A</span></li>
+                <li class="list-group-item liitem"><strong>Output Frequency:</strong><span class="pull-right"><span id="outputFrequency"></span>Hz</span></li>
+                <li class="list-group-item liitem"><strong>Output Load:</strong><span class="pull-right"><span id="outputLoad"></span>%</span></li>
+                <li class="list-group-item liitem"><strong>Output Efficiency:</strong><span class="pull-right"><span id="outputEfficiency"></span>%</span></li>
+                <li class="list-group-item liitem"><strong>Output Energy Use:</strong><span class="pull-right"><span id="outputEnergyUse"></span>kWh</span></li>
+              </ul>
+          </div>
         </div>
-      </div>
 
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="inputVoltageMin">Input Voltage (min)</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="inputVoltageMin" />
-          <div class="input-group-addon">V</div>
-        </div>
-      </div>
 
-  </form>
+      </div> <!-- End 2nd row -->
 
-  <form class="form-horizontal well col-sm-6 col-sm-offset-1">
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="inputVoltageMax">Input Voltage (max)</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="inputVoltageMax" />
-          <div class="input-group-addon">V</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="inputFrequency">Input Frequency</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="inputFrequency" />
-          <div class="input-group-addon">Hz</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="inputFailCause">Input Fail Cause</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="inputFailCause" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputStatus">Output Status</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputStatus" />
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputVoltage">Output Voltage</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputVoltage" />
-          <div class="input-group-addon">V</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputFrequency">Output Frequency</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputFrequency" />
-          <div class="input-group-addon">Hz</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputLoad">Output Load</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputLoad" />
-          <div class="input-group-addon">%</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputCurrent">Output Current</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputCurrent" />
-          <div class="input-group-addon">A</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputEfficiency">Output Efficiency</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputEfficiency" />
-          <div class="input-group-addon">%</div>
-        </div>
-      </div>
-
-      <div class="form-group">
-        <label class="col-sm-4 control-label" for="outputEnergyUsage">Output Energy Usage</label>
-        <div class="input-group col-sm-8">
-          <input type="text" class="form-control" id="outputEnergyUsage" />
-          <div class="input-group-addon">kWh</div>
-        </div>
-      </div>      
-
-  </form>
-</div>
-{% endblock %}
-
-{% block footer %}
-Last Heartbeat: <span id="heartbeat"></span>
-{% endblock %}
+    </div>
+  </body>
+</html>
