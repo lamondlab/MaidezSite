@@ -1,6 +1,31 @@
 from django.shortcuts import render
-from django.http import JsonResponse
-import redis
+from django.http import HttpResponse, JsonResponse
+#from django.contrib.auth import authenticate, login
+from django.contrib.auth.backends import ModelBackend
+import redis, base64
+
+CONTENT_TYPE="application/json-rpc"
+
+class HttpBasicAuthBackend(ModelBackend):
+    REALM='PepTrackerRestricted'
+     
+    def challengeHeaders(self):
+        return 'Basic realm="{0}"'.format(HttpBasicAuthBackend.REALM)    
+
+    def isAuthenticated(self, request):
+        try:
+            auth=request.META.get('HTTP_AUTHORIZATION', None)
+            if not auth: return False,None
+
+            method,auth=auth.split(" ",1)
+            if method.lower() is not 'basic': return False,None
+
+            username,password=base64.b64encode(auth).split(":")
+            user=self.authenticate(username,password)
+            if user is None: return False,None
+
+            return True user.username
+        except: return False,None
 
 REDIS_KEYS=(
     "upsModel",
@@ -40,3 +65,15 @@ def heartbeat(request):
         except AttributeError: data[k]=str(v)
 
     return JsonResponse(data)
+
+def rpc(request):
+    if request.method is not "POST": return HttpResponse(status=404)
+
+    auth=HttpBasicAuthBackend()
+    authd,username=auth.isAuthenticated(request)
+    if not authd:
+        response=HttpResponse(status=401)
+        response['WWW-Authenticate']=auth.challengeHeaders()
+        return response
+
+    return JsonResponse(dict(data="Hello!"))
