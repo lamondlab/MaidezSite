@@ -1,6 +1,6 @@
 from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
-#from django.contrib.auth import authenticate, login
+from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.backends import ModelBackend
 import redis, base64
 
@@ -66,6 +66,7 @@ def heartbeat(request):
 
     return JsonResponse(data)
 
+@csrf_exempt
 def rpc(request):
     if request.method is not "POST": return HttpResponse(status=404)
 
