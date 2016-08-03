@@ -24,7 +24,7 @@ class HttpBasicAuthBackend(ModelBackend):
             user=self.authenticate(username,password)
             if user is None: return False,None
 
-            return True user.username
+            return True,user.username
         except: return False,None
 
 REDIS_KEYS=(
