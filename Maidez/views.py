@@ -15,17 +15,22 @@ class HttpBasicAuthBackend(ModelBackend):
     def isAuthenticated(self, request):
         try:
             auth=request.META.get('HTTP_AUTHORIZATION', None)
+            print("AUTH",auth)
             if not auth: return False,None
 
             method,auth=auth.split(" ",1)
-            if method.lower() is not 'basic': return False,None
+            print("Method:",method,auth)
+            if method.lower()!='basic': return False,None
 
-            username,password=base64.b64encode(auth).split(":")
+            username,password=base64.b64decode(auth).decode('utf-8').split(":")
+            print("U/P:",username,password)
             user=self.authenticate(username,password)
             if user is None: return False,None
 
             return True,user.username
-        except: return False,None
+        except Exception as e: 
+            print(e)
+            return False,None
 
 REDIS_KEYS=(
     "upsModel",
@@ -68,7 +73,8 @@ def heartbeat(request):
 
 @csrf_exempt
 def rpc(request):
-    if request.method is not "POST":
+    print("Method:", request.method)
+    if request.method!="POST":
         print("404!")
         return HttpResponse(status=404)
 
