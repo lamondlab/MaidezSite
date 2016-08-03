@@ -118,7 +118,7 @@
         from: {color: '#a94442'},
         to: {color: '#3c763d'},
         // Set default step function for all animate calls
-        step: (state, bar) => {
+        step: function(state,bar) {
           bar.path.setAttribute('stroke', state.color);
           var value = Math.round(bar.value() * 100);
           bar.setText(value+"%");
