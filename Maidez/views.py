@@ -68,13 +68,17 @@ def heartbeat(request):
 
 @csrf_exempt
 def rpc(request):
-    if request.method is not "POST": return HttpResponse(status=404)
+    if request.method is not "POST":
+        print("404!")
+        return HttpResponse(status=404)
 
     auth=HttpBasicAuthBackend()
     authd,username=auth.isAuthenticated(request)
     if not authd:
         response=HttpResponse(status=401)
         response['WWW-Authenticate']=auth.challengeHeaders()
+        print("Challenge!")
         return response
 
+    print("JSON!")
     return JsonResponse(dict(data="Hello!"))
