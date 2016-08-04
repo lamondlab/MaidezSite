@@ -82,9 +82,12 @@ def rpc(request):
         response['WWW-Authenticate']=auth.challengeHeaders()
         return response
 
+    print("POST:", request.POST)
+
     data=dict(
-        phoneNumber=request.POST['phoneNumber'],
-        message=request.POST['message']
+        status="OK"
+        #phoneNumber=request.POST['phoneNumber'],
+        #message=request.POST['message']
     )
 
     return JsonResponse(data)
