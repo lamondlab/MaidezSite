@@ -49,6 +49,9 @@ REDIS_KEYS=(
     "outputEfficiency",
     "outputEnergyUsage",
     "heartbeat",
+    "sim800Balance",
+    "sim800RSSI",
+    "sim800NetworkStatus"    
 )
 _redis=redis.Redis()
 
