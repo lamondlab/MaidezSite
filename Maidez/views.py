@@ -2,7 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.backends import ModelBackend
-import redis, base64
+import redis, base64, json
 
 CONTENT_TYPE="application/json-rpc"
 
@@ -15,22 +15,17 @@ class HttpBasicAuthBackend(ModelBackend):
     def isAuthenticated(self, request):
         try:
             auth=request.META.get('HTTP_AUTHORIZATION', None)
-            print("AUTH",auth)
             if not auth: return False,None
 
             method,auth=auth.split(" ",1)
-            print("Method:",method,auth)
             if method.lower()!='basic': return False,None
 
             username,password=base64.b64decode(auth).decode('utf-8').split(":")
-            print("U/P:",username,password)
             user=self.authenticate(username,password)
             if user is None: return False,None
 
             return True,user.username
-        except Exception as e: 
-            print(e)
-            return False,None
+        except Exception as e: return False,None
 
 REDIS_KEYS=(
     "upsModel",
@@ -82,12 +77,13 @@ def rpc(request):
         response['WWW-Authenticate']=auth.challengeHeaders()
         return response
 
-    print("POST:", request.POST)
+    phoneNumber=request.POST.get('phoneNumber')
+    message=request.POST.get('message')
 
-    data=dict(
-        status="OK"
-        #phoneNumber=request.POST['phoneNumber'],
-        #message=request.POST['message']
-    )
+    if not phoneNumber and message:
+        data=dict(status="ERROR", detail="Malformed request")
+    else:
+        _redis.publish('sms', json.dumps(dict(phoneNumber=phoneNumber, message=message)))
+        data=dict(status="OK")
 
     return JsonResponse(data)
